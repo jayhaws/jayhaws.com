@@ -205,15 +205,21 @@
     </div>
   </section>
 
-  <!-- Writing CTA -->
+  <!-- Writing -->
   <section class="section" aria-labelledby="writing-heading">
-    <div class="container" style="text-align: center; max-width: 640px;">
+    <div class="container">
       <p class="section-label">Writing</p>
-      <h2 class="section-title" id="writing-heading">Perspectives on Sports Law &amp; NIL</h2>
+      <h2 class="section-title" id="writing-heading">Recent Posts</h2>
       <p class="section-subtitle">
-        Writing on the legal and business issues shaping college athletics&mdash;subscribe on Substack to get new pieces in your inbox.
+        Perspectives on corporate law, business litigation, and the business of sports.
       </p>
-      <div style="margin-top: 2.5rem;">
+
+      <!-- Post cards injected here by JS when posts.json has entries -->
+      <div class="posts-grid" id="home-posts" style="display:none;"></div>
+
+      <!-- Substack CTA — always shown -->
+      <div id="writing-cta" style="text-align: center; margin-top: 2.5rem;">
+        <p style="color: var(--gray-600); margin-bottom: 1.25rem;">Get new posts in your inbox.</p>
         <a href="https://substack.com/@jayhaws1" class="btn btn--navy" target="_blank" rel="noopener noreferrer">Follow on Substack</a>
       </div>
     </div>
@@ -255,6 +261,29 @@
   </footer>
 
   <script>
+    fetch('/posts.json')
+      .then(function(r) { return r.json(); })
+      .then(function(posts) {
+        if (!posts || !posts.length) return;
+        var grid = document.getElementById('home-posts');
+        var cta  = document.getElementById('writing-cta');
+        grid.innerHTML = posts.slice(0, 2).map(function(p) {
+          return '<article class="post-card">'
+            + '<div class="post-card__header"><h3 class="post-card__title">' + p.title + '</h3></div>'
+            + '<div class="post-card__body">'
+            + '<p class="post-card__excerpt">' + p.excerpt + '</p>'
+            + '<div class="post-card__footer">'
+            + '<span class="post-card__date">' + p.date + '</span>'
+            + '<a href="/blog/' + p.slug + '.html" class="post-card__link">Read more &rarr;</a>'
+            + '</div></div></article>';
+        }).join('');
+        grid.style.display = '';
+        cta.style.marginTop = '3rem';
+        cta.style.paddingTop = '3rem';
+        cta.style.borderTop = '1px solid var(--gray-200)';
+      })
+      .catch(function() {});
+
     const nav = document.getElementById('nav');
     const toggle = document.getElementById('navToggle');
     const links = document.getElementById('navLinks');
