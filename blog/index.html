@@ -122,48 +122,58 @@
     }));
 
     (function loadSubstackPosts() {
-      const RSS_URL = 'https://jayhaws1.substack.com/feed';
-      const API = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(RSS_URL);
+      var FEED = 'https://jayhaws1.substack.com/feed';
+      var PROXY = 'https://api.allorigins.win/get?url=' + encodeURIComponent(FEED);
 
-      const container     = document.getElementById('posts-container');
-      const loading       = document.getElementById('loading-state');
-      const comingSoon    = document.getElementById('coming-soon');
-      const subscribeFoot = document.getElementById('subscribe-footer');
+      var container     = document.getElementById('posts-container');
+      var loading       = document.getElementById('loading-state');
+      var comingSoon    = document.getElementById('coming-soon');
+      var subscribeFoot = document.getElementById('subscribe-footer');
 
       function showFallback() {
         loading.style.display = 'none';
         comingSoon.style.display = 'block';
       }
 
-      fetch(API)
+      function getText(el, tag) {
+        var node = el.getElementsByTagName(tag)[0];
+        return node ? (node.textContent || node.innerText || '') : '';
+      }
+
+      fetch(PROXY)
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          loading.style.display = 'none';
-          if (data.status !== 'ok' || !data.items || data.items.length === 0) {
-            showFallback();
-            return;
-          }
+          if (!data || !data.contents) { showFallback(); return; }
+          var parser = new DOMParser();
+          var xml = parser.parseFromString(data.contents, 'text/xml');
+          var items = Array.from(xml.getElementsByTagName('item'));
+          if (!items.length) { showFallback(); return; }
 
-          var html = data.items.map(function(item) {
-            var d = new Date(item.pubDate);
-            var month = d.toLocaleDateString('en-US', { month: 'short' });
-            var day   = d.getDate();
-            var plain = item.description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+          loading.style.display = 'none';
+          var html = items.map(function(item) {
+            var title  = getText(item, 'title');
+            var link   = getText(item, 'link') || getText(item, 'guid');
+            var date   = getText(item, 'pubDate');
+            var desc   = getText(item, 'description');
+            var d      = date ? new Date(date) : new Date();
+            var month  = d.toLocaleDateString('en-US', { month: 'short' });
+            var day    = d.getDate();
+            var plain  = desc.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
             var excerpt = plain.length > 220 ? plain.slice(0, 220).replace(/\s\S*$/, '') + '…' : plain;
             return [
-              '<a href="' + item.link + '" class="blog-list-item" target="_blank" rel="noopener noreferrer">',
+              '<a href="' + link + '" class="blog-list-item" target="_blank" rel="noopener noreferrer">',
               '  <div class="blog-list-item__date">',
               '    <div class="blog-list-item__month">' + month + '</div>',
               '    <div class="blog-list-item__day">' + day + '</div>',
               '  </div>',
               '  <div>',
-              '    <h2 class="blog-list-item__title">' + item.title + '</h2>',
+              '    <h2 class="blog-list-item__title">' + title + '</h2>',
               '    <p class="blog-list-item__excerpt">' + excerpt + '</p>',
-              '    <span class="blog-list-item__read-more">Read on Substack &rarr;</span>',
+              '    <span class="blog-list-item__read-more">Read on Substack →</span>',
               '  </div>',
               '</a>'
-            ].join('\n');
-          }).join('\n');
+            ].join('');
+          }).join('');
 
           container.innerHTML = html;
           subscribeFoot.style.display = 'block';
