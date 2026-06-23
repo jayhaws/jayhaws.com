@@ -37,6 +37,7 @@
           <li><a href="/">Home</a></li>
           <li><a href="/about.html">About</a></li>
           <li><a href="/blog/index.html" class="active">Writing</a></li>
+          <li><a href="/connect.html">Connect</a></li>
           <li><a href="/contact.html">Contact</a></li>
         </ul>
       </div>
@@ -52,14 +53,33 @@
   </header>
 
   <main>
-    <section class="section" aria-label="Writing coming soon">
-      <div class="container" style="max-width: 600px; text-align: center;">
-        <h2 style="font-family: 'Playfair Display', serif; color: var(--navy); margin-bottom: 1.25rem;">Writing coming soon.</h2>
-        <p style="color: var(--gray-600); font-size: 1.0625rem; line-height: 1.8; margin-bottom: 2.5rem;">
-          I write about NIL regulation, athletics compliance, and the business of college sports.
-          Subscribe on Substack to get new pieces in your inbox as soon as they publish.
-        </p>
-        <a href="https://substack.com/@jayhaws1" class="btn btn--navy" target="_blank" rel="noopener noreferrer">Subscribe on Substack</a>
+    <section class="section">
+      <div class="container" style="max-width: 800px;">
+
+        <!-- Posts load here -->
+        <div class="blog-list" id="posts-container" aria-live="polite"></div>
+
+        <!-- Shown while loading -->
+        <div id="loading-state" style="text-align:center; padding: 3rem 0; color: var(--gray-600);">
+          Loading posts&hellip;
+        </div>
+
+        <!-- Shown if no posts / fetch fails -->
+        <div id="coming-soon" style="display:none; text-align:center; padding: 3rem 0;">
+          <h2 style="font-family:'Playfair Display',serif; color:var(--navy); margin-bottom:1.25rem;">Writing coming soon.</h2>
+          <p style="color:var(--gray-600); font-size:1.0625rem; line-height:1.8; margin-bottom:2.5rem;">
+            I write about NIL regulation, athletics compliance, and the business of college sports.
+            Subscribe on Substack to get new pieces in your inbox as soon as they publish.
+          </p>
+          <a href="https://substack.com/@jayhaws1" class="btn btn--navy" target="_blank" rel="noopener noreferrer">Subscribe on Substack</a>
+        </div>
+
+        <!-- Subscribe footer shown when posts are present -->
+        <div id="subscribe-footer" style="display:none; text-align:center; margin-top:3rem; padding-top:3rem; border-top:1px solid var(--gray-200);">
+          <p style="color:var(--gray-600); margin-bottom:1.25rem;">Get new posts in your inbox.</p>
+          <a href="https://substack.com/@jayhaws1" class="btn btn--navy" target="_blank" rel="noopener noreferrer">Subscribe on Substack</a>
+        </div>
+
       </div>
     </section>
   </main>
@@ -72,6 +92,7 @@
           <li><a href="/">Home</a></li>
           <li><a href="/about.html">About</a></li>
           <li><a href="/blog/index.html">Writing</a></li>
+          <li><a href="/connect.html">Connect</a></li>
           <li><a href="/contact.html">Contact</a></li>
         </ul>
         <div style="display: flex; gap: 1rem;">
@@ -99,6 +120,56 @@
       links.classList.remove('open'); toggle.classList.remove('open');
       toggle.setAttribute('aria-expanded', 'false'); document.body.style.overflow = '';
     }));
+
+    (function loadSubstackPosts() {
+      const RSS_URL = 'https://jayhaws1.substack.com/feed';
+      const API = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(RSS_URL);
+
+      const container     = document.getElementById('posts-container');
+      const loading       = document.getElementById('loading-state');
+      const comingSoon    = document.getElementById('coming-soon');
+      const subscribeFoot = document.getElementById('subscribe-footer');
+
+      function showFallback() {
+        loading.style.display = 'none';
+        comingSoon.style.display = 'block';
+      }
+
+      fetch(API)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          loading.style.display = 'none';
+          if (data.status !== 'ok' || !data.items || data.items.length === 0) {
+            showFallback();
+            return;
+          }
+
+          var html = data.items.map(function(item) {
+            var d = new Date(item.pubDate);
+            var month = d.toLocaleDateString('en-US', { month: 'short' });
+            var day   = d.getDate();
+            var plain = item.description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+            var excerpt = plain.length > 220 ? plain.slice(0, 220).replace(/\s\S*$/, '') + '…' : plain;
+            return [
+              '<a href="' + item.link + '" class="blog-list-item" target="_blank" rel="noopener noreferrer">',
+              '  <div class="blog-list-item__date">',
+              '    <div class="blog-list-item__month">' + month + '</div>',
+              '    <div class="blog-list-item__day">' + day + '</div>',
+              '  </div>',
+              '  <div>',
+              '    <h2 class="blog-list-item__title">' + item.title + '</h2>',
+              '    <p class="blog-list-item__excerpt">' + excerpt + '</p>',
+              '    <span class="blog-list-item__read-more">Read on Substack &rarr;</span>',
+              '  </div>',
+              '</a>'
+            ].join('\n');
+          }).join('\n');
+
+          container.innerHTML = html;
+          subscribeFoot.style.display = 'block';
+        })
+        .catch(showFallback);
+    })();
   </script>
 </body>
 </html>
