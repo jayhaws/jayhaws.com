@@ -102,11 +102,20 @@
       <div class="container">
         <div class="connect-layout">
 
-          <!-- Twitter / X profile card -->
+          <!-- Twitter / X -->
           <div>
             <p class="section-label">Twitter / X</p>
             <h2 style="margin-bottom: 1.5rem;">@HawsJay</h2>
-            <div class="profile-card" style="max-width: 420px;">
+
+            <!-- Widget — shown if it loads successfully -->
+            <div id="x-widget" class="twitter-wrap">
+              <a class="twitter-timeline"
+                 href="https://twitter.com/HawsJay"
+                 data-height="680">Tweets by HawsJay</a>
+            </div>
+
+            <!-- Fallback card — shown if widget fails -->
+            <div id="x-fallback" style="display:none;" class="profile-card">
               <div class="profile-card__header">
                 <div class="profile-card__icon" style="background:#000; width:52px; height:52px;">
                   <svg viewBox="0 0 24 24" style="width:24px;height:24px;"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.631zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -198,7 +207,16 @@
     </div>
   </footer>
 
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
   <script>
+    setTimeout(function() {
+      var widget = document.getElementById('x-widget');
+      if (widget && !widget.querySelector('iframe')) {
+        widget.style.display = 'none';
+        document.getElementById('x-fallback').style.display = 'block';
+      }
+    }, 5000);
+
     const nav = document.getElementById('nav');
     const toggle = document.getElementById('navToggle');
     const links = document.getElementById('navLinks');
