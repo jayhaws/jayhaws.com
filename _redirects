@@ -1,0 +1,8 @@
+# Protocol + www → canonical HTTPS apex
+http://jayhaws.com/*     https://jayhaws.com/:splat  301!
+http://www.jayhaws.com/* https://jayhaws.com/:splat  301!
+https://www.jayhaws.com/* https://jayhaws.com/:splat 301!
+
+# Resume shortlink
+/resume      /about.html  301
+/resume.html /about.html  301

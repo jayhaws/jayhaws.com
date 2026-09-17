@@ -4,20 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Writing | Jay Haws — Corporate Law & Business Litigation</title>
+  <title>Writing | Jay Haws: Corporate Law & Business Litigation</title>
   <meta name="description" content="Jay Haws writes about corporate law, business litigation, and the business of sports. Subscribe on Substack.">
   <meta name="author" content="Jay Haws">
   <link rel="canonical" href="https://jayhaws.com/blog">
 
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://jayhaws.com/blog">
-  <meta property="og:title" content="Writing | Jay Haws — Corporate Law & Business Litigation">
-  <meta property="og:description" content="Corporate law, business litigation, and the business of sports — perspectives from a Wake Forest JD/MBA candidate. Subscribe on Substack.">
+  <meta property="og:title" content="Writing | Jay Haws: Corporate Law & Business Litigation">
+  <meta property="og:description" content="Corporate law, business litigation, and the business of sports: perspectives from a Wake Forest JD/MBA candidate. Subscribe on Substack.">
   <meta property="og:image" content="https://jayhaws.com/images/og-image.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@HawsJay">
   <meta name="twitter:title" content="Writing | Jay Haws">
-  <meta name="twitter:description" content="Corporate law, business litigation, and the business of sports — by Jay Haws, Wake Forest JD/MBA. Subscribe on Substack.">
+  <meta name="twitter:description" content="Corporate law, business litigation, and the business of sports, by Jay Haws, Wake Forest JD/MBA. Subscribe on Substack.">
   <meta name="twitter:image" content="https://jayhaws.com/images/og-image.jpg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -121,10 +121,7 @@
       toggle.setAttribute('aria-expanded', 'false'); document.body.style.overflow = '';
     }));
 
-    (function loadSubstackPosts() {
-      var FEED = 'https://jayhaws1.substack.com/feed';
-      var PROXY = 'https://api.allorigins.win/get?url=' + encodeURIComponent(FEED);
-
+    (function loadLocalPosts() {
       var container     = document.getElementById('posts-container');
       var loading       = document.getElementById('loading-state');
       var comingSoon    = document.getElementById('coming-soon');
@@ -135,47 +132,29 @@
         comingSoon.style.display = 'block';
       }
 
-      function getText(el, tag) {
-        var node = el.getElementsByTagName(tag)[0];
-        return node ? (node.textContent || node.innerText || '') : '';
-      }
-
-      fetch(PROXY)
+      fetch('/posts.json')
         .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (!data || !data.contents) { showFallback(); return; }
-          var parser = new DOMParser();
-          var xml = parser.parseFromString(data.contents, 'text/xml');
-          var items = Array.from(xml.getElementsByTagName('item'));
-          if (!items.length) { showFallback(); return; }
-
+        .then(function(posts) {
+          if (!posts || !posts.length) { showFallback(); return; }
           loading.style.display = 'none';
-          var html = items.map(function(item) {
-            var title  = getText(item, 'title');
-            var link   = getText(item, 'link') || getText(item, 'guid');
-            var date   = getText(item, 'pubDate');
-            var desc   = getText(item, 'description');
-            var d      = date ? new Date(date) : new Date();
-            var month  = d.toLocaleDateString('en-US', { month: 'short' });
-            var day    = d.getDate();
-            var plain  = desc.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-            var excerpt = plain.length > 220 ? plain.slice(0, 220).replace(/\s\S*$/, '') + '…' : plain;
+          container.innerHTML = posts.map(function(p) {
+            var d     = p.date ? new Date(p.date) : new Date();
+            var month = d.toLocaleDateString('en-US', { month: 'short' });
+            var day   = d.getDate();
             return [
-              '<a href="' + link + '" class="blog-list-item" target="_blank" rel="noopener noreferrer">',
+              '<a href="/blog/' + p.slug + '.html" class="blog-list-item">',
               '  <div class="blog-list-item__date">',
               '    <div class="blog-list-item__month">' + month + '</div>',
               '    <div class="blog-list-item__day">' + day + '</div>',
               '  </div>',
               '  <div>',
-              '    <h2 class="blog-list-item__title">' + title + '</h2>',
-              '    <p class="blog-list-item__excerpt">' + excerpt + '</p>',
-              '    <span class="blog-list-item__read-more">Read on Substack →</span>',
+              '    <h2 class="blog-list-item__title">' + p.title + '</h2>',
+              '    <p class="blog-list-item__excerpt">' + p.excerpt + '</p>',
+              '    <span class="blog-list-item__read-more">Read more &rarr;</span>',
               '  </div>',
               '</a>'
             ].join('');
           }).join('');
-
-          container.innerHTML = html;
           subscribeFoot.style.display = 'block';
         })
         .catch(showFallback);
